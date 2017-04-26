@@ -234,9 +234,10 @@ directory, while reading the FILENAME."
              (?u "Unstage"   magit-unstage-file)
              (?D "Diff..."   magit-diff-buffer-file-popup)
              (?L "Log..."    magit-log-buffer-file-popup)
-             (?B "Blame..."  magit-blame-popup)
+             (?r "...reverse" magit-blame-reverse)
              (?n "Next blob" magit-blob-next)
-             (?c "Commit"    magit-commit-popup))
+             (?c "Commit"    magit-commit-popup) nil nil
+             (?B "Blame..."  magit-blame-popup))
   :max-action-columns 5)
 
 (defvar magit-file-mode-lighter "")

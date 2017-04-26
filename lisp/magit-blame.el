@@ -206,11 +206,32 @@ and then turned on again when turning off the latter."
               (?r "Do not treat root commits as boundaries" "--root"))
   :options  '((?M "Detect lines moved or copied within a file" "-M")
               (?C "Detect lines moved or copied between files" "-C"))
-  :actions  '((?b "Blame" magit-blame))
+  :actions  '((?b "Blame"            magit-blame)
+              (?r "Blame in reverse" magit-blame-reverse))
   :default-arguments '("-w")
+  :max-action-columns 1
   :default-action 'magit-blame)
 
 ;;; Process
+
+(defun magit-blame-arguments* ()
+  (let ((args (magit-blame-arguments)))
+    (if magit-blame-mode
+        (--if-let (magit-blame-chunk-get :previous-hash)
+            (list it (magit-blame-chunk-get :previous-file)
+                  args (magit-blame-chunk-get :previous-start))
+          (user-error "Block has no further history"))
+      (--if-let (magit-file-relative-name nil (not magit-buffer-file-name))
+          (list (or magit-buffer-refname magit-buffer-revision) it args)
+        (if buffer-file-name
+            (user-error "Buffer isn't visiting a tracked file")
+          (user-error "Buffer isn't visiting a file"))))))
+
+;;;###autoload
+(defun magit-blame-reverse (revision file &optional args line)
+  "TODO"
+  (interactive (magit-blame-arguments*))
+  (magit-blame revision file (cons "--reverse" args) line))
 
 ;;;###autoload
 (defun magit-blame (revision file &optional args line)
@@ -229,18 +250,7 @@ point.
 ARGS is a list of additional arguments to pass to `git blame';
 only arguments available from `magit-blame-popup' should be used.
 \n(fn REVISION FILE &optional ARGS)" ; LINE is for internal use
-  (interactive
-   (let ((args (magit-blame-arguments)))
-     (if magit-blame-mode
-         (--if-let (magit-blame-chunk-get :previous-hash)
-             (list it (magit-blame-chunk-get :previous-file)
-                   args (magit-blame-chunk-get :previous-start))
-           (user-error "Block has no further history"))
-       (--if-let (magit-file-relative-name nil (not magit-buffer-file-name))
-           (list (or magit-buffer-refname magit-buffer-revision) it args)
-         (if buffer-file-name
-             (user-error "Buffer isn't visiting a tracked file")
-           (user-error "Buffer isn't visiting a file"))))))
+  (interactive (magit-blame-arguments*))
   (let ((toplevel (or (magit-toplevel)
                       (user-error "Not in git repository"))))
     (let ((default-directory toplevel))
